@@ -18,14 +18,14 @@ fi
 
 APP_NAME=$1
 export REPO=$2
-FICS_FILE=$3
+#FICS_FILE=$3
 
 echo "Checking Azure CLI login status..."
 EXPIRED_TOKEN=$(az ad signed-in-user show --query 'id' -o tsv || true)
 
 if [[ -z "$EXPIRED_TOKEN" ]]
 then
-    az login -o none
+    az login --tenant 9599c81c-bd07-46ac-9566-46b585a6e99c
 fi
 
 ACCOUNT=$(az account show --query '[id,name]')
@@ -80,7 +80,7 @@ then
     sleep 30s
 
     echo "Creating role assignment..."
-    az role assignment create --role contributor --subscription $SUB_ID --assignee-object-id $SP_ID --assignee-principal-type ServicePrincipal
+    az role assignment create --role contributor --subscription $SUB_ID --assignee-object-id $SP_ID --assignee-principal-type ServicePrincipal --scope subscriptions/$SUB_ID
     sleep 30s
 else
     echo "Existing Service Principal found."
@@ -88,17 +88,17 @@ fi
 
 echo "SP_ID: $SP_ID"
 
-echo "Creating Federated Identity Credentials..."
-echo 
-for FIC in $(envsubst < $FICS_FILE | jq -c '.[]'); do
-    SUBJECT=$(jq -r '.subject' <<< "$FIC")
-    
-    echo "Creating FIC with subject '${SUBJECT}'."
-    az ad app federated-credential create --id  $APP_ID --parameters ${FIC} || true
-done
+#echo "Creating Federated Identity Credentials..."
+#echo 
+#for FIC in $(envsubst < $FICS_FILE | jq -c '.[]'); do
+#    SUBJECT=$(jq -r '.subject' <<< "$FIC")
+#    
+#    echo "Creating FIC with subject '${SUBJECT}'."
+#    az ad app federated-credential create --id  $APP_ID --parameters ${FIC} || true
+#done
 
 # To get an Azure AD app FICs
-# az ad app federated-credential list --id $APP_ID
+ az ad app federated-credential list --id $APP_ID
 
 # To delete an Azure AD app FIC
 # az ad app federated-credential list --id $APP_ID --federated-credential-id ${FIC_ID}
